@@ -180,6 +180,11 @@ define pcodeop Forget_Sig;
   todo(reg1 :4);
 }
 
+#	{ 0x00040cf2, 0x001f0fff, OP3B, N("cirnd"), REG1, .fmask = F_CRYPT },
+:cirnd reg1 is raw_opcode=0xf2; subopcode2=0xc & reg1; subopcode_crypti=0x04 {
+  todo(reg1 :4);
+}
+
 #	{ 0x00050cf2, 0x001f0fff, OP3B, N("cis0begin"), REG1, .fmask = F_CRYPT },
 :cis0begin reg1 is raw_opcode=0xf2; subopcode2=0xc & reg1; subopcode_crypti=0x05 {
   todo(reg1 :4);
@@ -197,6 +202,11 @@ define pcodeop Forget_Sig;
 
 #	{ 0x00080cf2, 0x001f0fff, OP3B, N("cis1exec"), REG1, .fmask = F_CRYPT },
 :cis1exec reg1 is raw_opcode=0xf2; subopcode2=0xc & reg1; subopcode_crypti=0x08 {
+  todo(reg1 :4);
+}
+
+#	{ 0x000a0cf2, 0x001f0fff, OP3B, N("cichmod"), REG1, .fmask = F_CRYPT },
+:cichmod reg1 is raw_opcode=0xf2; subopcode2=0xc & reg1; subopcode_crypti=0x0a {
   todo(reg1 :4);
 }
 
@@ -220,8 +230,8 @@ define pcodeop Forget_Sig;
   todo(reg1 :4);
 }
 
-#	{ 0x000f0cf2, 0x001f0fff, OP3B, N("ciprecmac"), REG1, .fmask = F_CRYPT },
-:ciprecmac reg1 is raw_opcode=0xf2; subopcode2=0xc & reg1; subopcode_crypti=0x0f {
+#	{ 0x000f0cf2, 0x001f0fff, OP3B, N("cigfmul"), REG1, .fmask = F_CRYPT },
+:cigfmul reg1 is raw_opcode=0xf2; subopcode2=0xc & reg1; subopcode_crypti=0x0f {
   todo(reg1 :4);
 }
 
@@ -255,7 +265,17 @@ define pcodeop Forget_Sig;
   todo(reg1 :4);
 }
 
+#	{ 0x00160cf2, 0x001f0fff, OP3B, N("cisigcmp"), REG1, .fmask = F_CRYPT },
+:cisigcmp reg1 is raw_opcode=0xf2; subopcode2=0xc & reg1; subopcode_crypti=0x16 {
+  todo(reg1 :4);
+}
+
 #	{ 0x00170cf2, 0x001f0fff, OP3B, N("cisigenc"), REG1, .fmask = F_CRYPT },
 :cisigenc reg1 is raw_opcode=0xf2; subopcode2=0xc & reg1; subopcode_crypti=0x17 {
+  todo(reg1 :4);
+}
+
+#	{ 0x00180cf2, 0x001f0fff, OP3B, N("cisigclr"), REG1, .fmask = F_CRYPT },
+:cisigclr reg1 is raw_opcode=0xf2; subopcode2=0xc & reg1; subopcode_crypti=0x18 {
   todo(reg1 :4);
 }

@@ -3,35 +3,26 @@ package zone.mary.ghidra.falcon;
 import java.io.IOException;
 import java.util.*;
 
-import ghidra.app.util.Option;
 import ghidra.app.util.bin.BinaryReader;
 import ghidra.app.util.bin.ByteProvider;
-import ghidra.app.util.importer.MessageLog;
-import ghidra.app.util.opinion.AbstractProgramLoader;
-import ghidra.app.util.opinion.Loaded;
-import ghidra.app.util.opinion.LoadException;
+import ghidra.app.util.opinion.BinaryLoader;
 import ghidra.app.util.opinion.LoadSpec;
+import ghidra.app.util.opinion.Loader;
 import ghidra.app.util.opinion.LoaderTier;
-import ghidra.framework.model.DomainFolder;
-import ghidra.framework.model.DomainObject;
-import ghidra.framework.model.Project;
 import ghidra.framework.store.LockException;
 import ghidra.program.flatapi.FlatProgramAPI;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressOutOfBoundsException;
 import ghidra.program.model.address.AddressOverflowException;
-import ghidra.program.model.lang.CompilerSpec;
 import ghidra.program.model.lang.CompilerSpecID;
-import ghidra.program.model.lang.Language;
 import ghidra.program.model.lang.LanguageCompilerSpecPair;
 import ghidra.program.model.lang.LanguageID;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.mem.MemoryBlock;
 import ghidra.util.Msg;
 import ghidra.util.exception.CancelledException;
-import ghidra.util.task.TaskMonitor;
 
-public class NvidiaGRBootloaderLoader extends AbstractProgramLoader {
+public class NvidiaGRBootloaderLoader extends BinaryLoader {
 	private static final LanguageID FALCON4_LANGUAGE_ID = new LanguageID("falcon:LE:32:v4");
 	private static final LanguageID FALCON5_LANGUAGE_ID = new LanguageID("falcon:LE:32:v5");
 
@@ -70,21 +61,6 @@ public class NvidiaGRBootloaderLoader extends AbstractProgramLoader {
 	}
 
 	@Override
-	public List<Option> getDefaultOptions(ByteProvider provider, LoadSpec loadSpec, DomainObject domainObject,
-			boolean isLoadIntoProgram) {
-		List<Option> list = new ArrayList<Option>();
-
-		// TODO: Options?
-
-		return list;
-	}
-
-	@Override
-	public String validateOptions(ByteProvider provider, LoadSpec loadSpec, List<Option> options, Program program) {
-		return null;
-	}
-
-	@Override
 	public LoaderTier getTier() {
 		return LoaderTier.SPECIALIZED_TARGET_LOADER;
 	}
@@ -95,37 +71,9 @@ public class NvidiaGRBootloaderLoader extends AbstractProgramLoader {
 	}
 
 	@Override
-	protected List<Loaded<Program>> loadProgram(ByteProvider provider, String programName,
-			Project project, String projectFolderPath, LoadSpec loadSpec, List<Option> options,
-			MessageLog log, Object consumer, TaskMonitor monitor)
-			throws IOException, LoadException, CancelledException {
-
-		LanguageCompilerSpecPair pair = loadSpec.getLanguageCompilerSpec();
-		Language importerLanguage = getLanguageService().getLanguage(pair.languageID);
-		CompilerSpec importerCompilerSpec = importerLanguage.getCompilerSpecByID(pair.compilerSpecID);
-
-		Address baseAddr = importerLanguage.getAddressFactory().getDefaultAddressSpace().getAddress(0);
-		Program prog = createProgram(provider, programName, baseAddr, getName(), importerLanguage, importerCompilerSpec,
-				consumer);
-		boolean success = false;
-
-		List<Loaded<Program>> loadedList = List.of(new Loaded<>(prog, programName, projectFolderPath));
-
-		try {
-			loadInto(provider, loadSpec, options, log, prog, monitor);
-			success = true;
-
-			return loadedList;
-		} finally {
-			if (!success) {
-				prog.release(consumer);
-			}
-		}
-	}
-
-	@Override
-	protected void loadProgramInto(ByteProvider provider, LoadSpec loadSpec,
-			List<Option> options, MessageLog log, Program program, TaskMonitor monitor) throws IOException, LoadException, CancelledException {
+	protected void loadProgramInto(Program program, Loader.ImporterSettings settings)
+			throws IOException, CancelledException {
+		ByteProvider provider = settings.provider();
 		BinaryReader reader = new BinaryReader(provider, true);
 
 		FlatProgramAPI api = new FlatProgramAPI(program);
@@ -141,7 +89,8 @@ public class NvidiaGRBootloaderLoader extends AbstractProgramLoader {
 		try {
 			program.setImageBase(instructionMemoryAddress, true);
 		} catch (AddressOverflowException | LockException | IllegalStateException | AddressOutOfBoundsException e) {
-			throw new LoadException("Failed to set image base");
+			Msg.error(this, "Failed to set image base", e);
+			return;
 		}
 
 		byte[] data = provider.readBytes(startOffset + 0x10, size);
@@ -150,7 +99,8 @@ public class NvidiaGRBootloaderLoader extends AbstractProgramLoader {
 			MemoryBlock block = api.createMemoryBlock("bootloader", instructionMemoryAddress, data, false);
 			block.setPermissions(true, false, true);
 		} catch (Exception e) {
-			throw new LoadException("Failed to load image");
+			Msg.error(this, "Failed to load image", e);
+			return;
 		}
 
 		api.addEntryPoint(entrypointAddress);

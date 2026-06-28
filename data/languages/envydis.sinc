@@ -777,6 +777,13 @@
 }
 
 #	{ 0x000002fb, 0x000007ff, OP4B, N("mpopadd"), REG1, IMM16S, .fmask = F_FUC5P },
+:mpopadd reg1, imm16s is raw_opcode=0xFB; subopcodeb1_0_2=2 & reg1 ; imm16s {
+  # TODO: see mpop
+  pop32(reg1);
+  sp = sp + &reg1; # TODO: remove this horrible hack
+  sp = sp + imm16s;
+}
+
 #	{ 0x000003fb, 0x000007ff, OP4B, N("mpopaddret"), REG1, IMM16S, ENDMARK, .fmask = F_FUC5P },
 :mpopaddret reg1, imm16s is raw_opcode=0xFB; subopcodeb1_0_2=3 & reg1 ; imm16s {
   # TODO: see mpop
@@ -787,7 +794,7 @@
 }
 
 #	{ 0x000004fb, 0x000007ff, OP3B, N("mpopadd"), REG1, IMM8S, .fmask = F_FUC5P },
-:mpopaddret reg1, imm8s is raw_opcode=0xFB; subopcodeb1_0_2=4 & reg1 ; imm8s {
+:mpopadd reg1, imm8s is raw_opcode=0xFB; subopcodeb1_0_2=4 & reg1 ; imm8s {
   # TODO: see mpop
   pop32(reg1);
   sp = sp + &reg1; # TODO: remove this horrible hack
